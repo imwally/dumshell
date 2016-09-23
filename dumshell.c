@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +15,18 @@ sig_int(int signo)
 }
 
 void
-error_fatal(const char *msg) {
-    perror(msg);
+error_fatal(const char *msg, ...) {
+    char        buf[MAXLINE];
+    va_list     ap;
+    va_start(ap, msg);
+
+    vsnprintf(buf, MAXLINE, msg, ap);
+    snprintf(buf+strlen(buf), MAXLINE-strlen(buf)-1, ": %s", strerror(errno));
+    strcat(buf, "\n");
+
+    fputs(buf, stderr);
+
+    va_end(ap);
     exit(1);
 }
 
@@ -60,7 +71,7 @@ main(void)
         } else if (pid == 0) {
             printf(">>>> Process %d forked from %d <<<<\n", getpid(), getppid());
             execlp(buf, buf, (char *)0);
-            error_fatal("exec error");
+            error_fatal("exec error", buf);
             exit(127);
         }
 

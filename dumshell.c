@@ -23,7 +23,6 @@ error_fatal(const char *msg, ...) {
     vsnprintf(buf, MAXLINE, msg, ap);
     snprintf(buf+strlen(buf), MAXLINE-strlen(buf)-1, ": %s", strerror(errno));
     strcat(buf, "\n");
-
     fputs(buf, stderr);
 
     va_end(ap);
@@ -51,7 +50,7 @@ main(void)
     if ((getcwd(cwd, MAXLINE) != NULL)) {
         printf("Current working directory (CWD): %s\n", cwd);
     } else{
-        error_fatal("couldn't get working directory");
+        error_fatal("couldn't get working directory: %s", cwd);
     }
 
     printf("User running this process (UID): %d\n", getuid());
@@ -67,17 +66,17 @@ main(void)
 
         // Fork current process. 
         if ((pid = fork()) < 0) {
-            error_fatal("fork error");
+            error_fatal("fork error: %d", pid);
         } else if (pid == 0) {
             printf(">>>> Process %d forked from %d <<<<\n", getpid(), getppid());
             execlp(buf, buf, (char *)0);
-            error_fatal("exec error", buf);
+            error_fatal("exec error: %s", buf);
             exit(127);
         }
 
         // Wait for child process.
         if ((pid = waitpid(pid, &status, 0)) < 0) {
-            error_fatal("waitpid error");
+            error_fatal("waitpid error: %d", pid);
         } else {
             printf(">>>> Returning to parent process %d <<<<\n", getpid());
         }
